@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 					xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"					xmlns:p="http://www.springframework.org/schema/p" 
+	xmlns:tx="http://www.springframework.org/schema/tx" 					xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jee="http://www.springframework.org/schema/jee"					xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+						http://www.springframework.org/schema/context		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+						http://www.springframework.org/schema/mvc 			http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+						http://www.springframework.org/schema/jee 			http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+						http://www.springframework.org/schema/tx			http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+						http://www.springframework.org/schema/aop			http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+						http://www.springframework.org/schema/task 			http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+	
+<!--	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/methodguidance_test?autoReconnect=true" />
+		<property name="user" value="root" />
+		<property name="password" value="root" />
+		<property name="acquireIncrement" value="5" />
+		<property name="acquireRetryAttempts" value="3" />
+		<property name="acquireRetryDelay" value="5000" />
+		<property name="minPoolSize" value="10" />
+		<property name="maxPoolSize" value="100" />
+		<property name="maxIdleTime" value="3600" />
+		<property name="maxIdleTimeExcessConnections" value="600" />
+		<property name="idleConnectionTestPeriod" value="1800" />
+	</bean> -->
+	
+	<jee:jndi-lookup id="dataSource" jndi-name="jdbc/Accelerators" />
+	<jee:jndi-lookup id="dataSourceSC" jndi-name="jdbc/SCODS_ISW" />
+	<jee:jndi-lookup id="dataSourceCISF" jndi-name="jdbc/CISF" />
+	<jee:jndi-lookup id="dataSourceT" jndi-name="jdbc/Techline" />
+	
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate" 	p:dataSource-ref="dataSource" />
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- Sales Connect DataSource -->
+    <bean id="jdbcTemplateSC" class="org.springframework.jdbc.core.JdbcTemplate" p:dataSource-ref="dataSourceSC" />
+	<bean id="transactionManagerSC" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSourceSC" />
+	</bean>
+	
+	<!-- CISF Andy 2016.10.10 17:42 -->
+    <bean id="jdbcTemplateCISF" class="org.springframework.jdbc.core.JdbcTemplate" p:dataSource-ref="dataSourceCISF" />
+	<bean id="transactionManagerCISF" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSourceCISF" />
+	</bean>
+
+	<!-- Tecline DataSource  -->
+    <bean id="jdbcTemplateT" class="org.springframework.jdbc.core.JdbcTemplate" p:dataSource-ref="dataSourceT" />
+	<bean id="transactionManagerT" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSourceT" />
+	</bean>
+	
+	<!--<mvc:annotation-driven/>-->
+	<context:component-scan base-package="com.ibm.soe.rest">
+	    <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>   
+	</context:component-scan>
+	
+	<task:executor id="executor" pool-size="5" queue-capacity="1000" rejection-policy="CALLER_RUNS" />
+	<task:scheduler id="solutionScheduler" pool-size="1"/>
+	<task:annotation-driven executor="executor" scheduler="solutionScheduler" />
+	
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>queries/SalesConnectQuery</value>
+				<value>queries/ExpertGuidanceQuery</value>
+				<value>queries/AccReviewSql</value>
+				<value>queries/BluePrintFilterQuery</value>
+				<value>queries/BluePrintResultQuery</value>
+				<value>queries/CommFunctionQuery</value>
+				<value>queries/SolutionPart</value>
+				<value>queries/ProductInfoSql</value>
+				<value>queries/Review</value>
+				<value>queries/template</value>
+				<value>queries/PovEducationSql</value>
+				<value>queries/GlobalTechSalesSql</value>
+				<value>queries/HamburgerSql</value>
+				<!-- 
+				Here to list all query files for each function/module
+				<value>accelerators</value>
+				 -->
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Andy 2016.5.27 16:49 -->
+	<bean id="threadPoolTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="10"/>
+        <property name="keepAliveSeconds" value="0"/>
+        <property name="maxPoolSize" value="10"/>
+        <property name="queueCapacity" value="2500000"/>
+    </bean>	
+</beans>
